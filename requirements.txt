@@ -1,6 +1,14 @@
+# Oral microbiome mini-project: downstream Python analysis
+# Install with: python -m pip install -r requirements.txt
+
 numpy
 pandas
 scipy
 scikit-learn
 matplotlib
 seaborn
+jupyterlab
+
+# Upstream tools are managed separately (not pip requirements):
+# SRA Toolkit; QIIME 2 with DADA2; SILVA 138.2 reference data;
+# MAFFT/FastTree (via QIIME 2); ANCOM-BC2 (R/Bioconductor).
