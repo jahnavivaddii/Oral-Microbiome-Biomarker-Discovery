@@ -179,13 +179,10 @@ Final_Candidate_Biomarkers.csv
 
 ## Limitations and Future Work
 
-- The study used a single cohort of 251 samples, with 51 held-out test samples and no external validation.
-- Clinical confounders, including smoking, oral hygiene, and periodontal health, were not fully controlled.
-- Short-read 16S rRNA sequencing limited taxonomic and functional resolution.
-- ANCOM-BC2 was applied to the full dataset; agreement with Elastic Net features does not constitute independent validation.
-- Additional cohorts require careful harmonization to address sequencing differences and batch effects.
-- Future work should validate the 39 candidates, evaluate smaller biomarker panels, and explore higher-resolution sequencing, functional profiling, and prospective follow-up.
-- Exact software versions, upstream commands, and preprocessing implementation details should be documented for full reproducibility.
+- The study used a single cohort of 251 samples without external validation.
+- Potential clinical confounders were not fully controlled, and 16S rRNA sequencing limited taxonomic resolution.
+- The 39 candidate ASVs are exploratory and require independent validation.
+- Future work should evaluate larger, independent cohorts, address batch effects, and investigate smaller biomarker panels.
 
 ## Conclusion
 
