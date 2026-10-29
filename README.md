@@ -1,183 +1,136 @@
 # Exploring the Oral Microbiome for Biomarker Discovery in Early Cancer Detection
 
-An integrated 16S rRNA microbiome analysis combining bioinformatics, microbial diversity analysis, differential abundance testing, and machine learning to investigate differences between Healthy and Precancer oral microbiome samples.
+A 16S rRNA-based analysis integrating bioinformatics, microbial diversity, differential-abundance testing, and machine learning to identify candidate microbial biomarkers associated with oral precancer.
 
 ## Project Overview
 
-This project explores the oral microbiome for potential biomarker discovery in early cancer detection, with a focus on research relevant to Oral Squamous Cell Carcinoma (OSCC).
+This project investigates salivary microbiome differences between Healthy and Precancer groups using publicly available 16S rRNA sequencing data from **251 saliva samples (127 Healthy and 124 Precancer)**.
 
-Using 16S rRNA sequencing data from 251 samples (127 Healthy and 124 Precancer), the study investigates differences in microbial diversity, taxonomic composition, and microbial abundance between healthy and precancerous groups. The workflow integrates QIIME 2 and DADA2 for sequencing data processing, microbial community analysis, differential abundance analysis using ANCOM-BC2, and machine learning for sample classification.
+The workflow combines QIIME 2 and DADA2 for sequence processing, microbial diversity and taxonomic analysis, ANCOM-BC2 for differential-abundance testing, and machine learning for sample classification. Candidate biomarkers are prioritized by integrating statistical findings with model-selected features.
 
-The primary objective is to characterize microbial differences between Healthy and Precancer samples and identify candidate microbial biomarkers by integrating statistical findings with machine learning results.
+The study focuses on **Healthy–Precancer classification and exploratory biomarker discovery**, not the diagnosis of established oral cancer or prediction of cancer progression.
 
 ## Objectives
 
-- Process 16S rRNA sequencing data to generate amplicon sequence variants (ASVs) for downstream microbiome analysis.
-- Assess and compare alpha and beta diversity between Healthy and Precancer samples.
-- Characterize microbial community composition and investigate taxonomic differences between the two groups.
-- Identify differentially abundant microbial features associated with precancerous conditions.
-- Develop and evaluate machine learning models for Healthy versus Precancer classification.
-- Integrate differential abundance results with machine learning feature selection to identify candidate microbial biomarkers.
-- Visualize microbial diversity, taxonomic composition, classification performance, and candidate biomarker patterns.
+- Process 16S rRNA sequencing reads to identify amplicon sequence variants (ASVs).
+- Compare microbial diversity and taxonomic composition between Healthy and Precancer samples.
+- Identify differentially abundant ASVs associated with oral precancer.
+- Develop and evaluate machine-learning models for Healthy–Precancer classification.
+- Integrate statistical and model-selected features to prioritize candidate microbial biomarkers.
+- Visualize microbial patterns, model performance, and candidate biomarkers.
 
 ## Dataset
 
-This study uses publicly available 16S rRNA sequencing data obtained from the NCBI Sequence Read Archive (SRA), associated with **BioProject PRJNA386665**.
-
-**Data source:** [NCBI BioProject PRJNA386665](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA386665)
+**Source:** [NCBI BioProject PRJNA386665](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA386665)
 
 | Characteristic | Value |
 |---|---|
-| NCBI BioProject accession | PRJNA386665 |
-| Total samples analyzed | 251 |
-| Healthy samples | 127 |
-| Precancer samples | 124 |
-| Initial amplicon sequence variants (ASVs) | 12,932 |
-| Classification target | Healthy (0) vs Precancer (1) |
+| Total saliva samples | 251 |
+| Healthy | 127 |
+| Precancer | 124 |
+| Initial DADA2 ASVs | 12,932 |
+| ASVs retained for machine learning | 823 |
+| Classification labels | Healthy (0), Precancer (1) |
 
-Raw sequencing reads were processed using QIIME 2 and DADA2 to generate an ASV feature table and representative sequences. The initial ASV count refers to the feature table before downstream prevalence-based filtering.
+Samples with established oral squamous cell carcinoma (OSCC) were excluded. The initial ASV count represents the feature table before prevalence filtering.
 
 ## Analysis Workflow
 
-The project consists of two main stages: upstream bioinformatics processing using QIIME 2 and downstream statistical analysis and machine learning using Python.
+### 1. Data Acquisition and Sequence Processing
 
-### 1. Raw Sequencing Data Acquisition
+Sequencing data were retrieved using the SRA Toolkit (`prefetch`, `fasterq-dump`) and imported into QIIME 2.
 
-Raw sequencing data were retrieved from NCBI SRA using the SRA Toolkit.
+Single-end reads were processed using DADA2 for quality filtering, denoising, and chimera removal (`trim-left = 0`, `trunc-len = 240`), generating an ASV feature table and representative sequences.
 
-- Downloaded sequencing data using `prefetch`.
-- Converted SRA files to FASTQ format using `fasterq-dump`.
-- Prepared sample metadata for Healthy and Precancer group comparisons.
+### 2. Taxonomic and Phylogenetic Analysis
 
-### 2. QIIME 2 Processing and DADA2 Denoising
+Taxonomy was assigned using a Naive Bayes classifier trained on dereplicated SILVA 138.2 V4 reference sequences extracted with F515/R806 primers. Classification used QIIME 2's `feature-classifier classify-sklearn`.
 
-Single-end sequencing reads were imported into QIIME 2 using `qiime tools import`.
+Phylogenetic analysis used MAFFT and FastTree. Microbial composition was examined at phylum and genus levels.
 
-- Inspected sequencing quality using `qiime demux summarize`.
-- Performed denoising using `qiime dada2 denoise-single`.
-- Generated an ASV feature table, representative sequences, and denoising statistics.
+### 3. Microbial Diversity Analysis
 
-### 3. Taxonomic Classification
+**Alpha diversity:** Shannon, Observed Features, and Faith's Phylogenetic Diversity.
 
-Taxonomic classification was performed using the **SILVA 138.2** reference database.
+**Beta diversity:** Bray–Curtis, Jaccard, weighted UniFrac, and unweighted UniFrac.
 
-The upstream workflow included V4-region reference extraction, reference dereplication, Naive Bayes classifier training, and taxonomic assignment using `qiime feature-classifier classify-sklearn`.
+QIIME 2 generated diversity metrics, distance matrices, and PCoA results. Shannon and Observed Features were compared using Mann–Whitney U tests. Bray–Curtis PCoA, PERMANOVA, and PERMDISP were used to assess community-level differences. A cluster-exclusion sensitivity analysis examined the robustness of the PERMANOVA finding.
 
-Taxonomic composition was explored using QIIME 2 taxa bar plots and downstream Python visualizations.
+### 4. Differential-Abundance Analysis
 
-### 4. Phylogenetic and Diversity Analysis
+ANCOM-BC2 identified ASVs differing significantly between Healthy and Precancer groups using an adjusted p-value threshold of **q < 0.05**.
 
-A phylogenetic tree was generated using the QIIME 2 MAFFT/FastTree workflow.
+### 5. Machine-Learning Classification
 
-**Alpha diversity metrics**
+Four classifiers were evaluated: Dummy Classifier, Decision Tree, Random Forest, and Elastic Net Logistic Regression.
 
-- Shannon diversity
-- Observed Features
-- Faith's Phylogenetic Diversity
+The workflow included:
 
-**Beta diversity metrics**
+- An 80:20 stratified split (200 training, 51 test samples).
+- A 10% prevalence threshold, retaining 823 ASVs.
+- Centered log-ratio (CLR) transformation with pseudocount 0.5.
+- Standard scaling for Elastic Net.
+- Repeated stratified five-fold cross-validation (10 repetitions).
+- Held-out evaluation using ROC-AUC, accuracy, precision, sensitivity, specificity, F1-score, and a confusion matrix.
+- A 95% bootstrap ROC-AUC confidence interval from 1,000 resamples.
 
-- Bray–Curtis dissimilarity
-- Jaccard distance
-- Weighted UniFrac
-- Unweighted UniFrac
+### 6. Candidate Biomarker Prioritization
 
-The upstream workflow generated diversity artifacts and ordination results for these metrics.
+Candidate ASVs were identified by intersecting ANCOM-BC2-significant features with ASVs selected by Elastic Net and checking directional agreement.
 
-In the Python notebook, Shannon diversity and Observed ASVs were compared between groups using Mann–Whitney U tests. Bray–Curtis PCoA was used to visualize community differences, with PERMANOVA and PERMDISP applied to assess group differences and dispersion.
+| Selection stage | ASVs |
+|---|---:|
+| ANCOM-BC2-significant | 376 |
+| Elastic Net-selected | 103 |
+| Overlapping | 52 |
+| Directionally concordant candidates | **39** |
 
-### 5. Taxonomic Composition Analysis
+The 39 candidates were taxonomically annotated and visualized. This process represents exploratory prioritization rather than independent validation.
 
-Microbial community composition was examined using taxonomic annotations and ASV abundance data.
+### 7. Visualization
 
-Relative abundance visualizations were generated at the phylum and genus levels to investigate taxonomic patterns across Healthy and Precancer samples.
-
-### 6. Differential Abundance Analysis
-
-ANCOM-BC2 was used to identify microbial features showing statistically significant differences between Healthy and Precancer samples.
-
-The resulting significant-feature table was used for exploratory candidate biomarker identification.
-
-### 7. Machine Learning Classification
-
-Four classification approaches were compared:
-
-- Dummy Classifier (baseline)
-- Elastic-Net Logistic Regression
-- Random Forest
-- Decision Tree
-
-The machine learning pipeline included:
-
-- An 80/20 stratified training and test split.
-- Prevalence-based feature filtering using a 10% threshold.
-- Centered log-ratio (CLR) transformation with a pseudocount of 0.5.
-- Feature standardization for Elastic-Net Logistic Regression.
-- Repeated stratified five-fold cross-validation with 10 repeats.
-- Held-out test evaluation of the selected Elastic-Net model.
-
-Model performance was assessed using classification metrics, a confusion matrix, and ROC-AUC. A bootstrap confidence interval was also estimated for the held-out test ROC-AUC.
-
-### 8. Exploratory Candidate Biomarker Identification
-
-Candidate microbial features were identified by integrating:
-
-1. ASVs with nonzero coefficients in the fitted Elastic-Net classifier.
-2. Statistically significant ASVs identified by ANCOM-BC2.
-
-Overlapping features were assessed for directional agreement between their Elastic-Net coefficients and ANCOM-BC2 results.
-
-The resulting candidates were taxonomically annotated and visualized.
-
-### 9. Data Visualization
-
-The Python notebook includes:
-
-- Alpha-diversity comparison plots.
-- Bray–Curtis PCoA visualization.
-- Phylum- and genus-level relative abundance plots.
-- ROC curve and confusion matrix.
-- Elastic-Net coefficient and ANCOM-BC2 effect-size plots.
-- Candidate biomarker heatmap using log-transformed, row-wise standardized relative abundance values.
+The analysis includes alpha-diversity plots, Bray–Curtis PCoA, phylum- and genus-level relative abundance plots, ROC curves, a confusion matrix, Elastic Net coefficient and ANCOM-BC2 effect-size plots, and a candidate biomarker heatmap using log-transformed, row-wise standardized relative abundances.
 
 ## Results
 
-The selected Elastic-Net classifier produced the following recorded held-out test results:
+### Microbial Diversity and Composition
+
+Shannon diversity (p = 0.2021) and Observed Features (p = 0.7247) showed no significant differences between groups.
+
+Bray–Curtis PERMANOVA detected a statistically significant but small difference in microbial composition (pseudo-F = 4.4918, R² = 1.77%, p = 0.001). PERMDISP was nonsignificant (p = 0.974). Cluster-exclusion analysis supported this finding (R² = 1.94%, p = 0.001; n = 223).
+
+### Differential Abundance
+
+ANCOM-BC2 identified **376 significant ASVs**, including 116 enriched and 260 depleted in Precancer samples. Significant ASVs included assignments to *Prevotella*, *Veillonella*, *Streptococcus*, and *Neisseria*. These results concern individual ASVs, not entire genera.
+
+### Machine-Learning Performance
+
+| Model | Mean CV ROC-AUC |
+|---|---:|
+| Elastic Net Logistic Regression | **0.843** |
+| Random Forest | 0.815 |
+| Decision Tree | 0.713 |
+| Dummy Classifier | 0.507 |
+
+**Elastic Net held-out test performance:**
 
 | Metric | Result |
-|---|---|
+|---|---:|
+| ROC-AUC | **0.8385** |
+| 95% bootstrap CI | 0.7084–0.9348 |
 | Accuracy | 74.51% |
 | Sensitivity | 80.00% |
 | Specificity | 69.23% |
-| ROC-AUC | 0.8385 |
-| 95% bootstrap ROC-AUC confidence interval | 0.7084–0.9348 |
+| Precision | 71.43% |
+| F1-score | 0.7547 |
 
-The integration of Elastic-Net feature selection and ANCOM-BC2 differential abundance results identified **39 concordant candidate ASVs**.
-
-These findings describe associations and classification performance within the analyzed dataset. The candidate biomarkers have not been independently or clinically validated.
+The combined statistical and machine-learning analysis prioritized **39 exploratory candidate ASVs** for further validation.
 
 ## Tools and Technologies
 
-**Bioinformatics**
+**Bioinformatics:** SRA Toolkit, QIIME 2, DADA2, SILVA 138.2, MAFFT, FastTree, ANCOM-BC2.
 
-- NCBI SRA Toolkit
-- QIIME 2
-- DADA2
-- SILVA 138.2
-- MAFFT
-- FastTree
-- ANCOM-BC2
-
-**Statistical Analysis and Machine Learning**
-
-- Python
-- Jupyter Notebook
-- NumPy
-- Pandas
-- SciPy
-- Scikit-learn
-- Matplotlib
-- Seaborn
+**Python analysis:** Jupyter Notebook/JupyterLab, NumPy, pandas, SciPy, scikit-learn, Matplotlib, Seaborn.
 
 ## Repository Structure
 
@@ -188,11 +141,11 @@ Oral-Microbiome-Biomarker-Discovery/
 └── oral_microbiome_analysis.ipynb
 ```
 
-Additional documentation, figures, and the final scientific report may be added as the project is finalized.
+Additional input files, exported QIIME 2 results, figures, and report documents may be included separately.
 
 ## Installation and Usage
 
-Install the downstream Python dependencies:
+Install downstream Python dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -200,7 +153,7 @@ python -m pip install -r requirements.txt
 
 Open `oral_microbiome_analysis.ipynb` in Jupyter Notebook or JupyterLab.
 
-The notebook requires the following input files:
+**Required notebook inputs:**
 
 ```text
 feature-table.tsv
@@ -212,27 +165,30 @@ shannon.tsv
 observed_features.tsv
 ```
 
-Place these files in the notebook's working directory or update the file paths accordingly.
+Some inputs must be exported from QIIME 2 artifacts before running the relevant notebook sections. Place the required files in the notebook's working directory or update their paths.
 
-The notebook also generates the following output files:
+**Generated outputs include:**
 
-- `train_sample_ids.csv`
-- `test_sample_ids.csv`
-- `Final_Candidate_Biomarkers.csv`
+```text
+train_sample_ids.csv
+test_sample_ids.csv
+Final_Candidate_Biomarkers.csv
+```
 
-**Note:** `requirements.txt` contains the Python dependencies for downstream analysis. QIIME 2 and ANCOM-BC2 require separate bioinformatics environments.
+**Environment note:** `requirements.txt` covers downstream Python dependencies. QIIME 2, DADA2, SRA Toolkit, and ANCOM-BC2 require separate installations or environments.
 
 ## Limitations and Future Work
 
-- The machine learning task distinguishes Healthy and Precancer samples; it does not directly diagnose OSCC.
-- Candidate biomarkers are exploratory and require validation using independent cohorts.
-- ANCOM-BC2 was performed on the full dataset, so the biomarker concordance analysis is not an independent validation.
-- The predictive model's generalizability beyond the analyzed cohort remains to be established.
-- Exact upstream software versions, processing parameters, and commands should be documented to improve reproducibility.
+- The study used a single cohort of 251 samples, with 51 held-out test samples and no external validation.
+- Clinical confounders, including smoking, oral hygiene, and periodontal health, were not fully controlled.
+- Short-read 16S rRNA sequencing limited taxonomic and functional resolution.
+- ANCOM-BC2 was applied to the full dataset; agreement with Elastic Net features does not constitute independent validation.
+- Additional cohorts require careful harmonization to address sequencing differences and batch effects.
+- Future work should validate the 39 candidates, evaluate smaller biomarker panels, and explore higher-resolution sequencing, functional profiling, and prospective follow-up.
+- Exact software versions, upstream commands, and preprocessing implementation details should be documented for full reproducibility.
 
 ## Conclusion
 
-This project integrates 16S rRNA sequencing analysis, microbial diversity assessment, taxonomic profiling, differential abundance testing, and machine learning to investigate oral microbiome differences between Healthy and Precancer samples.
+This study identified a statistically significant but small difference in salivary microbial composition between Healthy and Precancer groups. Elastic Net achieved a held-out ROC-AUC of **0.8385**, while integration of ANCOM-BC2 and model-selected features prioritized **39 directionally concordant ASVs** as exploratory biomarker candidates.
 
-The combined analysis identifies microbial patterns and prioritizes candidate ASVs for further investigation, demonstrating an exploratory approach to oral microbiome-based biomarker discovery.
-
+These findings support further investigation of salivary microbial signatures for oral precancer detection, subject to independent validation.
